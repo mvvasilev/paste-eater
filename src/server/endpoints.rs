@@ -1,4 +1,4 @@
-use rocket::{post, get, response::status::Custom, http::Status, State, serde::json::Json};
+use rocket::{post, get, response::status::Custom, http::Status, State, serde::json::Json, delete};
 use serde_derive::{Serialize, Deserialize};
 
 use crate::paste::{PasteHandler, PasteOutput, PasteLanguage};
@@ -29,5 +29,13 @@ pub fn get_paste(uid: String, paste_handler: &State<PasteHandler>) -> Custom<Jso
     match paste_handler.fetch_raw_paste(uid) {
         Ok(paste) => Custom(Status::Ok, Json(PasteResponse { paste: Some(paste), error: None })),
         Err(e) => Custom(Status::InternalServerError, Json(PasteResponse { paste: None, error: Some(format!("{}", e)) })),
+    }
+}
+
+#[delete("/paste/<uid>")]
+pub fn delete_paste(uid: String, paste_handler: &State<PasteHandler>) -> Custom<String> {
+    match paste_handler.delete_paste(uid) {
+        Ok(_) => Custom(Status::Ok, "".to_string()),
+        Err(e) => Custom(Status::InternalServerError, format!("{}", e))
     }
 }

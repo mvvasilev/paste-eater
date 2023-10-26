@@ -217,5 +217,18 @@ impl PasteHandler {
 
         Ok(paste)
     }
+
+    pub fn delete_paste(&self, uid: PasteUID) -> Result<(), PasteError> {
+        let config = self.config_handler.fetch_config()?;
+
+        let mut file_path = Path::new(&config.files_location).to_path_buf();
+
+        file_path.push(Path::new(&format!("{}.paste", uid)));
+
+        match std::fs::remove_file(file_path) {
+            Ok(_) => Ok(()),
+            Err(e) => Err(PasteError::new_internal(&format!("Failed to delete paste '{}'.", uid), Box::new(e))),
+        }
+    }
 }
 
