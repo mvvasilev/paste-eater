@@ -70,6 +70,7 @@ export default function Topbar(props) {
                                     variant="secondary" 
                                     id="button-decrypt"
                                     onClick={() => props.onDecrypt(decryptionKey)}
+                                    disabled={!decryptionKey}
                                 >
                                     Decrypt
                                 </Button>
@@ -89,6 +90,7 @@ export default function Topbar(props) {
                                     variant="secondary" 
                                     id="button-encrypt"
                                     onClick={() => props.onEncrypt(encryptionKey)}
+                                    disabled={!encryptionKey}
                                 >
                                     Encrypt
                                 </Button>

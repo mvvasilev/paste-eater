@@ -5,3 +5,5 @@
 </p>
 
 The premiere paste-eating paste service. Wholly sponsored by Ralph Wiggum.
+
+Available now, at https://paste.haedhutner.dev/
