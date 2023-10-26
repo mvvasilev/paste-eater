@@ -39,6 +39,14 @@ fn create_paste_handler() -> Result<PasteHandler, PasteEaterError> {
 
     let config_handler = ConfigurationHandler::new_with_args(&args)?;
 
+    println!("Using config at '{}'", config_handler.get_config_path().display());
+
+    let Ok(config) = config_handler.fetch_config() else {
+        return Err(PasteEaterError::new(&format!("Unable to retrieve configuration at '{}'", config_handler.get_config_path().display())));
+    };
+
+    println!("Using config :\n{:?}", config);
+
     Ok(PasteHandler::new(config_handler))
 }
 

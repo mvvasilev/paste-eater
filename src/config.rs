@@ -95,6 +95,10 @@ impl ConfigurationHandler {
         }
     }
 
+    pub fn get_config_path(&self) -> &Path {
+        self.config_path.as_path()
+    }
+
     pub fn new_with_path(path: &Path) -> Result<Self, ConfigurationError> {
         ConfigurationHandler::new_with_defaults(path, &PasteEaterConfig {
             files_location: default_files_location(),
