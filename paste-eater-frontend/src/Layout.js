@@ -27,4 +27,12 @@ function Layout({children}) {
     );
 }
 
+export function apiLocation() {
+    if (process.env.NODE_ENV === "development") {
+        return "http://localhost:8000";
+    }
+    
+    return window.location.origin;
+}
+
 export default Layout;

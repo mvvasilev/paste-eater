@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import Layout from "../Layout";
+import Layout, { apiLocation } from "../Layout";
 import Topbar from "../components/Topbar";
 import { useParams } from "react-router-dom";
 import MonacoEditor from 'react-monaco-editor';
@@ -18,7 +18,7 @@ export default function PastePage() {
     let [ editor, setEditor ] = useState({});
 
     useEffect(() => {
-        fetch(`${window.location.origin}/api/paste/${pasteId}`)
+        fetch(`${apiLocation()}/api/paste/${pasteId}`)
             .then(response => {
                 if (response.ok) {
                     return response.json()

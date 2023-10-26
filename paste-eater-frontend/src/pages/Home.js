@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import Layout from "../Layout";
+import Layout, { apiLocation } from "../Layout";
 import Topbar from "../components/Topbar";
 import MonacoEditor from 'react-monaco-editor';
 import fetchEditorThemes from '../EditorThemes';
@@ -62,7 +62,7 @@ export default function HomePage() {
             return;
         }
 
-        let promise = fetch(`${window.location.origin}/api/paste`, {
+        let promise = fetch(`${apiLocation()}/api/paste`, {
             method: "POST",
             body: JSON.stringify(paste)
         }).then((response) => {
