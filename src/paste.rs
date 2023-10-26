@@ -11,39 +11,96 @@ type PasteError = PasteEaterError;
 
 type PasteUID = String;
 
-#[repr(u8)]
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub enum PasteLanguage {
-    None = 0u8,
-    CSharp = 1u8,
-    Java = 2u8,
-    CPlusPlus = 3u8,
-    C = 4u8,
-    Python = 5u8,
-    Rust = 6u8,
-    Go = 7u8,
-}
-
-fn convert_u8_to_language(val: u8) -> PasteLanguage {
-    match val {
-        0u8 => PasteLanguage::None,
-        1u8 => PasteLanguage::CSharp,
-        2u8 => PasteLanguage::Java,
-        3u8 => PasteLanguage::CPlusPlus,
-        4u8 => PasteLanguage::C,
-        5u8 => PasteLanguage::Python,
-        6u8 => PasteLanguage::Rust,
-        7u8 => PasteLanguage::Go,
-        _ => PasteLanguage::None
-    }
-}
+const LANGUAGES: &[&str] = &[
+    "abap",
+    "apex",
+    "azcli",
+    "bat",
+    "bicep",
+    "cameligo",
+    "clojure",
+    "coffee",
+    "cpp",
+    "csharp",
+    "csp",
+    "css",
+    "cypher",
+    "dart",
+    "dockerfile",
+    "ecl",
+    "elixir",
+    "flow9",
+    "freemarker2",
+    "fsharp",
+    "go",
+    "graphql",
+    "handlebars",
+    "hcl",
+    "html",
+    "ini",
+    "java",
+    "javascript",
+    "json",
+    "julia",
+    "kotlin",
+    "less",
+    "lexon",
+    "liquid",
+    "lua",
+    "m3",
+    "markdown",
+    "mdx",
+    "mips",
+    "msdax",
+    "mysql",
+    "objective-c",
+    "pascal",
+    "pascaligo",
+    "perl",
+    "pgsql",
+    "php",
+    "pla",
+    "postiats",
+    "powerquery",
+    "powershell",
+    "protobuf",
+    "pug",
+    "python",
+    "qsharp",
+    "r",
+    "razor",
+    "redis",
+    "redshift",
+    "restructuredtext",
+    "ruby",
+    "rust",
+    "sb",
+    "scala",
+    "scheme",
+    "scss",
+    "shell",
+    "solidity",
+    "sophia",
+    "sparql",
+    "sql",
+    "st",
+    "swift",
+    "systemverilog",
+    "tcl",
+    "twig",
+    "typescript",
+    "vb",
+    "wgsl",
+    "xml",
+    "yaml"
+];
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct PasteOutput {
     pub encrypted: bool,
     pub created: String,
     pub last_accessed: String, 
-    pub language: PasteLanguage,
+    pub language: String,
     pub data: String
 }
 
@@ -61,7 +118,7 @@ impl PasteHandler {
         }
     }
 
-    pub fn create_new_paste(&self, encrypt: bool, language: &PasteLanguage, paste_data: &String) -> Result<PasteUID, PasteError> {
+    pub fn create_new_paste(&self, encrypt: bool, language: &String, paste_data: &String) -> Result<PasteUID, PasteError> {
         let config = self.config_handler.fetch_config()?;
 
         let data_path = Path::new(&config.files_location);
@@ -112,7 +169,10 @@ impl PasteHandler {
         }
 
         file_data.push(flags);
-        file_data.push(language.to_owned() as u8);
+
+        let language_index = LANGUAGES.iter().position(|&r| r == language).unwrap_or(0);
+
+        file_data.push(language_index as u8);
 
         if config.compress {
             file_data.extend(compress_prepend_size(paste_data.as_bytes()));
@@ -179,7 +239,7 @@ impl PasteHandler {
         let encrypted = 0b1000_0000 & flags != 0;
         let compressed = 0b0100_0000 & flags != 0;
 
-        let language = convert_u8_to_language(file_bytes[1]);
+        let language = file_bytes[1];
 
         let bytes = if compressed {
             match decompress_size_prepended(&file_bytes[2..]) {
@@ -199,7 +259,7 @@ impl PasteHandler {
             encrypted,
             last_accessed: DateTime::UNIX_EPOCH.to_rfc2822(),
             created: DateTime::UNIX_EPOCH.to_rfc2822(),
-            language,
+            language: LANGUAGES[language as usize].to_string(),
             data
         };
 

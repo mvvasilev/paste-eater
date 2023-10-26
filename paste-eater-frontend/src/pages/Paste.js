@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from "react";
 import Layout from "../Layout";
 import Topbar from "../components/Topbar";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams } from "react-router-dom";
 import MonacoEditor from 'react-monaco-editor';
 import fetchEditorThemes from '../EditorThemes';
+
+import { AES, enc } from 'crypto-js';
 
 export default function PastePage() {
     let themeList = fetchEditorThemes();
@@ -13,9 +15,10 @@ export default function PastePage() {
     let [ paste, setPaste ] = useState({});
     let [ editorLanguage, setEditorLanguage ] = useState("rust");
     let [ editorTheme, setEditorTheme ] = useState("vs-dark");
+    let [ editor, setEditor ] = useState({});
 
     useEffect(() => {
-        fetch(`${process.env.REACT_APP_PASTE_API_LOCATION}/paste/${pasteId}`)
+        fetch(`${window.location.origin}/api/paste/${pasteId}`)
             .then(response => {
                 if (response.ok) {
                     return response.json()
@@ -29,20 +32,25 @@ export default function PastePage() {
                 }
 
                 setPaste(response.paste);
-
-                console.log(response);
+                setEditorLanguage(response.paste.language);
             })
             .catch(error => {
                 console.log(error);
 
                 setPaste({ data: "Failed to retrieve paste, or paste does not exist." })
             });
-    }, [])
+    }, [pasteId])
 
-    function beforeEditorMount(editor, monaco) {
+    function onEditorMount(editor, monaco) {
         themeList.forEach(value => {
             monaco.editor.defineTheme(value.id, value.theme);
         })
+
+        setEditor(editor);
+    }
+
+    function decryptContents(secret) {
+        editor.setValue(AES.decrypt(paste.data, secret).toString(enc.Utf8));
     }
 
     return (
@@ -52,6 +60,8 @@ export default function PastePage() {
                 onThemeChange={(value) => setEditorTheme(value)}
                 onLanguageChange={(value) => setEditorLanguage(value)}
                 defaultThemeValue="vs-dark"
+                defaultLanguage="rust"
+                onDecrypt={decryptContents}
             />
             <MonacoEditor
                 language={editorLanguage}
@@ -62,7 +72,7 @@ export default function PastePage() {
                     selectOnLineNumbers: true,
                     readOnly: true
                 }}
-                editorDidMount={beforeEditorMount}
+                editorDidMount={onEditorMount}
                 disabled
             />
         </Layout>

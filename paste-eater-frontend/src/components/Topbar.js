@@ -1,13 +1,17 @@
+import React, { useState } from "react";
 import Form from 'react-bootstrap/Form';
 import Button from 'react-bootstrap/Button';
 import Navbar from 'react-bootstrap/Navbar';
 import InputGroup from 'react-bootstrap/InputGroup';
 import fetchEditorThemes from '../EditorThemes';
-
-const DEFAULT_EDITOR_THEMES = ["vs-dark", "vs-light", "hc-black", "hc-light"];
+import metadata from 'monaco-editor/esm/metadata';
+import Image from 'react-bootstrap/Image';
 
 export default function Topbar(props) {
     let themeList = fetchEditorThemes();
+
+    let [ encryptionKey, setEncryptionKey ] = useState("");
+    let [ decryptionKey, setDecryptionKey ] = useState("");
 
     let selectOptions = themeList.map(value => (<option value={value.id}>{value.name}</option>));
     selectOptions.push((<option value="vs-dark">Visual Studio Dark</option>));
@@ -16,44 +20,41 @@ export default function Topbar(props) {
     selectOptions.push((<option value="hc-light">High Contrast Light</option>));
 
     return (
-        <div className="border border-primary">
+        <div className="bg-primary">
             <Navbar className="d-flex justify-content-between">
-                    <Navbar.Brand href="/">
-                        <img
+                    <Navbar.Brand className="ms-2" href="/">
+                        <Image
                             src={process.env.PUBLIC_URL + '/jar.svg'}
-                            width="30"
-                            height="30"
-                            className="d-inline-block align-top"
-                            alt="React Bootstrap logo"
+                            width="50"
+                            height="50"
+                            className="d-inline-block align-top bg-dark"
+                            alt="Jar"
+                            roundedCircle
                         />
                     </Navbar.Brand>
-                    <Form>
+                    <Form className="me-2">
                         <InputGroup>
                             <InputGroup.Text id="editor-language">Language</InputGroup.Text>
                             <Form.Select 
                                 disabled={props.paste != null} 
-                                value={props.paste?.language?.toLowerCase()} 
+                                defaultValue={props.paste?.language?.toLowerCase() ?? props.defaultLanguage ?? "rust"} 
                                 aria-label="Language"
                                 onChange={(event) => props.onLanguageChange(event.target.value)}
                             >
-                                <option value="plaintext">None</option>
-                                <option value="csharp">C#</option>
-                                <option value="java">Java</option>
-                                <option value="go">Go</option>
-                                <option value="rust">Rust</option>
-                                <option value="cpp">C++</option>
-                                <option value="python">Python</option>
+                                {
+                                    metadata.languages.map(language => (<option value={language.label}>{language.label}</option>))
+                                }
                             </Form.Select>
                         </InputGroup>
                     </Form>
-                    <Form>
+                    <Form className="me-2">
                         <InputGroup>
                             <InputGroup.Text id="editor-theme">Theme</InputGroup.Text>
                             <Form.Select 
                                 aria-label="Theme"
                                 type="select"
                                 onChange={(event) => props.onThemeChange(event.target.value)}
-                                defaultValue={props.defaultThemeValue}
+                                defaultValue={props.defaultThemeValue ?? "vs-dark"}
                             >
                                 {
                                     selectOptions
@@ -63,12 +64,18 @@ export default function Topbar(props) {
                     </Form>
                     {
                         props.paste?.encrypted && 
-                        <Form>
+                        <Form className="me-2">
                             <InputGroup>
-                                <Button variant="outline-secondary" id="button-decrypt">
+                                <Button 
+                                    variant="secondary" 
+                                    id="button-decrypt"
+                                    onClick={() => props.onDecrypt(decryptionKey)}
+                                >
                                     Decrypt
                                 </Button>
                                 <Form.Control
+                                    id="decryption-key"
+                                    onChange={(event) => setDecryptionKey(event.target.value)}
                                     aria-label="Decrypt the paste"
                                 />
                             </InputGroup>
@@ -76,29 +83,33 @@ export default function Topbar(props) {
                     }
                     {
                         !props.paste && 
-                        <Form>
+                        <Form className="me-2">
                             <InputGroup>
-                                <Button variant="outline-secondary" id="button-encrypt">
+                                <Button 
+                                    variant="secondary" 
+                                    id="button-encrypt"
+                                    onClick={() => props.onEncrypt(encryptionKey)}
+                                >
                                     Encrypt
                                 </Button>
                                 <Form.Control
+                                    id="encryption-key"
+                                    onChange={(event) => setEncryptionKey(event.target.value)}
                                     aria-label="Encrypt the paste and create it"
                                 />
                             </InputGroup>
                         </Form>
                     }
                     {
-                        props.paste != null && 
-                        <Form>
-                            <Button variant="outline-danger" id="button-delete">
-                                Delete
-                            </Button>
-                        </Form>
-                    }
-                    {
                         !props.paste && 
-                        <Form>
-                            <Button variant="outline-primary" id="button-create">
+                        <Form className="me-2">
+                            <Button 
+                                variant="success" 
+                                className="me-2"
+                                id="button-create"
+                                onClick={props.onCreate}
+                                disabled={encryptionKey}
+                            >
                                 Create
                             </Button>
                         </Form>

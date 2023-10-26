@@ -1,5 +1,7 @@
+use std::path::{PathBuf, Path};
+
 use clap::Parser;
-use rocket::{routes, fairing::{Fairing, Info, Kind}, http::Header, Request, Response};
+use rocket::{routes, fairing::{Fairing, Info, Kind}, http::Header, Request, Response, fs::{FileServer, relative, NamedFile}, get};
 
 use crate::{server::endpoints, args::Args, config::ConfigurationHandler, paste::PasteHandler, error::PasteEaterError};
 
@@ -15,11 +17,21 @@ pub async fn start_paste_eater() -> Result<(), rocket::Error> {
     .manage(paste_handler)
     .attach(Cors)
     .mount("/api", routes![endpoints::create_paste, endpoints::get_paste, endpoints::delete_paste])
-    // .mount("/", FileServer::from(relative!("paste-eater-frontend/dist")))
+    .mount("/", routes![serve_frontend])
+    .mount("/static", FileServer::from(relative!("/paste-eater-frontend/build/static")).rank(10))
     .launch()
     .await?;
 
     Ok(())
+}
+
+#[get("/<file..>", rank = 9)]
+async fn serve_frontend(file: PathBuf) -> Option<NamedFile> {
+    if file.extension().is_some() {
+        return NamedFile::open(Path::new(relative!("/paste-eater-frontend/build/")).join(file)).await.ok();
+    }
+
+    NamedFile::open(Path::new(relative!("/paste-eater-frontend/build/index.html"))).await.ok()
 }
 
 fn create_paste_handler() -> Result<PasteHandler, PasteEaterError> {
